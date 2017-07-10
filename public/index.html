@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Scred</title>
+  <script src="https://unpkg.com/vue"></script>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <link rel=stylesheet href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.4.3/css/bulma.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    .card {
+      margin-bottom: 1em;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div v-if="user">
+      <section class="hero is-medium is-info is-bold">
+        <div class="hero-head">
+          <header class="nav">
+            <div class="container">
+              <div class="nav-left">
+                <p class="nav-item">{{ user.name }}</p>
+              </div>
+              <div class="nav-right">
+                <a class="nav-item" v-on:click="fbLogout">Sign out</a>
+              </div>
+            </div>
+          </header>
+        </div>
+        <div class="hero-body">
+          <div class="container">
+            <h1 class="title">My Scred portfolio</h1>
+          </div>
+        </div>
+        <div class="hero-foot">
+          <nav class="tabs is-boxed is-fullwidth">
+            <div class="container">
+              <ul>
+                <li v-bind:class="{'is-active': tab === 1}" v-on:click="toggleTab(1)">
+                  <a>Overview</a>
+                </li>
+                <li v-bind:class="{'is-active': tab === 2}" v-on:click="toggleTab(2)">
+                  <a>My Contracts</a>
+                </li>
+                <li v-bind:class="{'is-active': tab === 3}" v-on:click="toggleTab(3)">
+                  <a>Add Contracts</a>
+                </li>
+              </ul>
+            </div>
+          </nav>
+        </div>
+      </section>
+      <div class="section" v-if="tab === 1">
+        <div class="container">
+          <div class="card">
+            <header class="card-header">
+              <p class="card-header-title">
+                Credit breakdown
+              </p>
+              <a class="card-header-icon">
+                <span class="icon">
+                  <i class="fa fa-angle-down"></i>
+                </span>
+              </a>
+            </header>
+            <div class="card-content">
+              <div class="content">
+                <div id="donutchart"></div>
+              </div>
+            </div>
+            <footer class="card-footer">
+              <div class="card-footer-item">
+                <p class="heading">current score</p>
+              </div>
+              <div class="card-footer-item">
+                <p class="title">{{ cScore }}</p>
+              </div>
+            </footer>
+          </div>
+        </div>
+      </div>
+      <div class="section" v-else-if="tab === 2">
+        <div class="container">
+          <div class="card" v-for="contract in contracts" v-bind:style="">
+            <div class="card-content">
+              <div class="media">
+                <div class="media-left">
+                  <figure class="image is-48x48">
+                    <img :src="contract.img" alt="Image">
+                  </figure>
+                </div>
+                <div class="media-content">
+                  <p class="title is-4">{{contract.name}}</p>
+                  <p class="subtitle is-6">Initiated: {{contract.date}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="section" v-else-if="tab === 3">
+        <div class="container has-text-centered">
+          <div class="field has-addons">
+            <p class="control is-expanded">
+              <span class="select is-fullwidth is-info">
+                <select name="Company" v-model="selected">
+                  <option value="Eversource">Eversource</option>
+                  <option value="National Grid">National Grid</option>
+                  <option value="City Bank">City Bank</option>
+                  <option value="Propertyware">Propertyware</option>
+                  <option value="ATT">AT&T</option>
+                </select>
+              </span>
+            </p>
+            <p class="control">
+              <button type="submit" class="button is-info" v-on:click="addContract">Choose</button>
+            </p>
+          </div>
+          <article class="message is-success" v-if="added">
+            <div class="message-header">
+              <p>Contrat added!</p>
+              <button class="delete" v-on:click="deleteMessage"></button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+    <section class="hero is-info is-bold is-fullheight" v-else>
+      <div class="hero-head">
+        <header class="nav">
+          <div class="container">
+            <div class="nav-left">
+              <span class="nav-item">
+                <span>SCRED</span>
+              </span>
+            </div>
+          </div>
+        </header>
+      </div>
+      <div class="hero-body">
+        <div class="container has-text-centered">
+          <button class="button is-info is-inverted" v-on:click="fbLogin">Sign in with Facebook</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script type="text/javascript">
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId            : '449377995443971',
+        autoLogAppEvents : false,
+        xfbml            : false,
+        version          : 'v2.9'
+      });
+      FB.AppEvents.logPageView();
+    };
+
+    (function(d, s, id){
+       var js, fjs = d.getElementsByTagName(s)[0];
+       if (d.getElementById(id)) {return;}
+       js = d.createElement(s); js.id = id;
+       js.src = "//connect.facebook.net/en_US/sdk/debug.js";
+       fjs.parentNode.insertBefore(js, fjs);
+     }(document, 'script', 'facebook-jssdk'));
+
+  </script>
+  <script type="text/javascript">
+    function renderChart(tableData) {
+      google.charts.load("current", {packages:["corechart"]});
+      google.charts.setOnLoadCallback(drawChart);
+      var tdata = tableData
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable(tdata);
+
+        var options = {
+          pieHole: 0.4,
+          legend: {position: 'none'},
+          colors: ['#00d1b2', '#3273dc', '#23d160', '#ffdd57', '#ff3860'],
+          pieSliceText: 'none'
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('donutchart'));
+        chart.draw(data, options);
+      }
+    }
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        login: false,
+        user: null,
+        tab: 1,
+        providers: [
+          {
+            id: '255170664248',
+            name: 'National Grid',
+            index: 3
+          },
+          {
+            id: '8576093908',
+            name: 'AT&T',
+            index: 1
+          }
+        ],
+        contracts: [],
+        tableData: [
+          ['Company', 'Breakdown'],
+          ['National Grid', 3],
+          ['AT&T', 1]
+        ],
+        selected: '',
+        added: false,
+        cScore: 55
+      },
+      methods: {
+
+        fbLogin: function() {
+          var vm = this
+          FB.login(function(res) {
+            if (res.authResponse) {
+              FB.api('/me', function(res) {
+                vm.user = res
+                renderChart(vm.tableData)
+              })
+              FB.api('/me/picture', function(res) {
+                vm.profilePic = res.url
+              })
+              vm.providers.forEach(function(provider) {
+                FB.api(`/${provider.id}/picture`, function(res) {
+                  vm.contracts.push({
+                    name: provider.name,
+                    img: res.data.url,
+                    index: provider.index,
+                    onGoing: true
+                  })
+                })
+              })
+            }
+          }, {scope: 'public_profile'})
+        },
+        fbLogout: function () {
+          var vm = this
+          FB.logout(function(res) {
+            vm.user = null
+            vm.cScore = 55
+          })
+        },
+        toggleTab: function (n) {
+          this.tab = n
+          if (n === 1) {
+            renderChart(this.tableData)
+          }
+        },
+        addContract: function() {
+          var vm = this
+          if (this.selected === 'Eversource') {
+            FB.api('/1452686498310792/picture', function(res) {
+              vm.contracts.push({
+                name: 'Eversource',
+                img: res.data.url,
+                index: 3,
+                onGoing: true
+              })
+            })
+            this.tableData.push(['Eversource', 3])
+            this.added = true
+            this.cScore = this.cScore*1.3
+          } else if (this.selected === 'Propertyware') {
+            FB.api('/7765391015/picture', function(res) {
+              vm.contracts.push({
+                name: 'Propertyware',
+                img: res.data.url,
+                index: 5,
+                onGoing: true
+              })
+            })
+            this.tableData.push(['Propertyware', 5])
+            this.added = true
+            this.cScore = this.cScore*1.5
+          } else if (this.selected === 'City Bank') {
+            FB.api('/152431441489088/picture', function(res) {
+              vm.contracts.push({
+                name: 'City Bank',
+                img: res.data.url,
+                index: 7,
+                onGoing: true
+              })
+            })
+            this.tableData.push(['Citi Bank', 7])
+            this.added = true
+            this.cScore = this.cScore*1.7
+          }
+        },
+        deleteMessage: function() {
+          if (this.added) {
+            this.added = false
+          }
+        }
+      },
+
+      mounted() {
+
+      }
+    })
+  </script>
+</body>
+</html>

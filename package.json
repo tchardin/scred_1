@@ -1,0 +1,24 @@
+{
+  "name": "scred_1",
+  "version": "1.0.0",
+  "description": "First prototype for a decentralized credit score system",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tchardin/scred_1.git"
+  },
+  "author": "tdot",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tchardin/scred_1/issues"
+  },
+  "homepage": "https://github.com/tchardin/scred_1#readme",
+  "dependencies": {
+    "express": "^4.15.3",
+    "vue-charts": "^0.2.1"
+  }
+}
